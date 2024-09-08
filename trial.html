@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lift System Visualization</title>
+    <link rel="stylesheet" href="trial.css">
+</head>
+<body>
+    <div class="container">
+        <div class="controls-container">
+            <input type="number" id="numFloors" placeholder="Number of Floors" min="1">
+            <input type="number" id="numLifts" placeholder="Number of Lifts" min="1">
+            <button id="generateButton">Generate</button>
+        </div>
+        <div id="liftContainer" class="lift-container"></div>
+        <div id="buttonsContainer" class="buttons-container"></div>
+
+        <div id="floorButtonsContainer" class="floor-buttons-container"></div>
+
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="trial.js"></script>
+    <script src="sketch.js"></script>
+</body>
+</html>
