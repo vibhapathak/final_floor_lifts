@@ -1,0 +1,217 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Merriweather', serif; /* Apply Merriweather font globally */
+  background-color: #A04747;
+}
+
+.underline {
+  width: 50%; /* Adjust width as needed */
+  height: 2px; /* Thickness of the underline */
+  background-color: #D8A25E; /* Color of the underline */
+  margin: 0.5em auto; /* Center it with margin */
+}
+
+input::placeholder {
+  color: white; /* Change placeholder text color to white */
+}
+
+h2 {
+  color: black;
+  text-align: center; 
+  padding-top: 0.5em;
+}
+
+.topic {
+  margin: 0;
+  text-align: center;
+  color: #D8A25E;
+  margin-bottom: 0.7em;
+}
+
+.input__container {
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
+  justify-content: center;
+  align-items: center;
+  width: 20rem;
+  padding: 1em;
+  border-radius: 4px;
+}
+
+#submit-btn {
+  border-radius: 6px;
+  padding: 0.75em 1em;
+  color: black;
+  background-color: #EEDF7A;
+  cursor: pointer;
+  width: 100%;
+  border: none;
+  outline: none;
+}
+
+#submit-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+input {
+  height: 40px;
+  width: 100%;
+  padding: 0.5em;
+  border: 0.5px solid #EEDF7A;
+  outline: none;
+  margin: 0.5em 0;
+  color: black;
+}
+
+#container {
+  padding: 2.5em;
+}
+
+p {
+  color: black;
+  text-align: right;
+  position: relative;
+  top: -6rem;
+}
+
+.up-down {
+  color: black;
+  background: #D8A25E;
+  border: none;
+  outline: none;
+  padding: 0.5em;
+  cursor: pointer;
+  border-radius: 4px;
+  margin: 0.2em;
+  font-family: 'Merriweather', serif; /* Ensure up/down buttons use the font */
+}
+
+.floordiv {
+  display: flex;
+}
+
+.floor {
+  width: 100%;
+  display: flex;
+  height: 100px;
+  border-bottom: 1px solid #343131;
+  position: relative;
+  font-family: 'Merriweather', serif; /* Ensure floor numbers use the font */
+}
+
+.lift-div {
+  width: 60px; /* Fixed width */
+  height: 90px;
+  margin-top: 5px;
+  justify-content: center;
+  margin-left: 1em;
+  z-index: 1;
+  background-color: #EEDF7A;
+  display: flex;
+  overflow: hidden;
+}
+
+.lift {
+  display: flex;
+  margin-left: 1em;
+}
+
+.left-door, .right-door {
+  background: black;
+  width: 50%;
+  height: 100%;
+  transition: transform 2.5s linear;
+  z-index: 2;
+}
+
+.left-door {
+  border-right: 0.5px solid #fff;
+}
+
+.right-door {
+  border-left: 0.5px solid #fff;
+}
+
+.btn-div {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  margin-right: 1em;
+}
+
+@media (max-width: 500px) {
+  .input__container {
+      width: 15rem;
+      padding: 0.75em;
+  }
+  #container {
+      padding: 0.5em;
+  }
+  .btn-div {
+      margin-right: 0.5em;
+  }
+  .up-down {
+      padding: 0.2em;
+      margin: 0.1em;
+  }
+  .lift {
+      display: flex;
+      margin-left: 0.5em;
+  }
+  .lift-div {
+      width: 60px; /* Fixed width */
+      margin-left: 0.7em;
+      border: 0.5px solid rgb(72, 189, 228);
+      z-index: 1;
+      background-color: white;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .input__container {
+      width: 25rem;
+      padding: 0.75em;
+  }
+  #container {
+      padding: 1.5em;
+  }
+  .btn-div {
+      margin-right: 1.75em;
+  }
+}
+
+@media (min-width: 1025px) and (max-width: 1500px) {
+  .input__container {
+      width: 25rem;
+      padding: 0.75em;
+  }
+  #container {
+      padding: 2em;
+  }
+  .btn-div {
+      margin-right: 2em;
+  }
+}
+
+.merriweather-bold {
+  font-family: "Merriweather", serif;
+  font-weight: 900;
+  font-style: normal;
+}
+
+.merriweather-regular {
+  font-family: "Merriweather", serif;
+  font-weight: 700;
+  font-style: normal;
+}
+
+.disabled {
+  background-color: lightgray; /* Lighter color for disabled state */
+  pointer-events: none; /* Prevent clicks */
+  opacity: 0.6; /* Slightly transparent */
+  transition: background-color 0.3s ease; /* Smooth transition */
+}
