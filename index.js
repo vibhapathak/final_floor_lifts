@@ -10,101 +10,88 @@ var prevFloor = 0;
 
 let targetFloors = [];
 
-//on Submit button add values
 submitButton.addEventListener("click", () => {
-  
     container.innerHTML = " ";
     liftContainer.innerHTML = "";
-    for (let i = floorInput.value; i > 0; i--) {
-      // make floors
-      createFloors(i, LiftInput.value);
+    
+    const numFloors = parseInt(floorInput.value, 10);
+    const numLifts = parseInt(LiftInput.value, 10);
+
+    for (let i = numFloors; i > 0; i--) {
+        // Create floors
+        createFloors(i, numLifts);
     }
 
-    //empty input box
+    // Empty input box
     LiftInput.value = "";
     floorInput.value = "";
-  
 });
 
-// make Floors
-
+// Make Floors
 function createFloors(floors, lifts) {
-  const floorDiv = document.createElement("div");
+    const floorDiv = document.createElement("div");
+    floorDiv.setAttribute("class", "floordiv");
 
-  floorDiv.setAttribute("class", "floordiv");
+    const floorContainer = document.createElement("div");
+    floorContainer.setAttribute("class", "floor");
+    floorContainer.dataset.floor = floors;
 
-  const floorContainer = document.createElement("div");
-  floorContainer.setAttribute("class", "floor");
+    const buttonContainer = document.createElement("div");
+    buttonContainer.setAttribute("class", "btn-div");
 
-  floorContainer.dataset.floor = floors;
+    const UpButton = document.createElement("button");
+    const DownButton = document.createElement("button");
 
-  const buttonContainer = document.createElement("div");
+    UpButton.setAttribute("class", "up-down");
+    DownButton.setAttribute("class", "up-down");
 
-  buttonContainer.setAttribute("class", "btn-div");
+    UpButton.setAttribute("id", floors);
+    DownButton.setAttribute("id", floors);
 
-  const UpButton = document.createElement("button");
-  const DownButton = document.createElement("button");
+    UpButton.innerText = "Up";
+    DownButton.innerText = "Down";
 
-  UpButton.setAttribute("class", "up-down");
-  DownButton.setAttribute("class", "up-down");
+    UpButton.dataset.floor = floors;
+    DownButton.dataset.floor = floors;
 
-  UpButton.setAttribute("id", floors);
-  DownButton.setAttribute("id", floors);
+    buttonContainer.append(UpButton);
+    buttonContainer.append(DownButton);
 
-  UpButton.innerText = "Up";
-  DownButton.innerText = "Down";
+    let floorNumber = document.createElement("p");
+    floorNumber.setAttribute("class", "floorName");
+    floorNumber.innerText = `Floor ${floors}`;
 
-  UpButton.dataset.floor = floors;
-  DownButton.dataset.floor = floors;
+    buttonContainer.append(floorNumber);
+    floorContainer.append(buttonContainer);
+    floorDiv.append(floorContainer);
+    container.append(floorDiv);
 
-  buttonContainer.append(UpButton);
-  buttonContainer.append(DownButton);
-
-  let floorNumber = document.createElement("p");
-
-  floorNumber.setAttribute("class", "floorName");
-
-  floorNumber.innerText = `Floor ${floors}`;
-
-  buttonContainer.append(floorNumber);
-
-  floorContainer.append(buttonContainer);
-
-  floorDiv.append(floorContainer);
-
-  container.append(floorDiv);
-
-  //Logic to generate Lifts
-
-  for (let j = 0; j < lifts; j++) {
-    //Check all lifts should be on 1st
+    // Logic to generate Lifts only for the first floor
     if (floors === 1) {
-      let Lifts = document.createElement("div");
-      Lifts.setAttribute("class", "lift-div");
+        for (let j = 0; j < lifts; j++) {
+            let Lifts = document.createElement("div");
+            Lifts.setAttribute("class", "lift-div");
+            Lifts.setAttribute("onfloor", 1); // Ensure lifts start on floor 1
+            Lifts.dataset.currentLocation = prevFloor;
 
-      Lifts.setAttribute("onfloor", 1);
+            let leftDoor = document.createElement("div");
+            let rightDoor = document.createElement("div");
 
-      Lifts.dataset.currentLocation = prevFloor;
-      console.log(prevFloor);
+            leftDoor.setAttribute("class", "left-door");
+            rightDoor.setAttribute("class", "right-door");
 
-      leftDoor = document.createElement("div");
-      RightDoor = document.createElement("div");
+            Lifts.appendChild(leftDoor);
+            Lifts.appendChild(rightDoor);
 
-      leftDoor.setAttribute("class", "left-door");
-      RightDoor.setAttribute("class", "right-door");
-
-      Lifts.appendChild(leftDoor);
-      Lifts.appendChild(RightDoor);
-
-      liftContainer.appendChild(Lifts);
-      liftContainer.setAttribute("class", "lift");
-
-      floorContainer.append(liftContainer);
-
-      floorDiv.append(floorContainer);
+            liftContainer.appendChild(Lifts);
+        }
+        
+        liftContainer.setAttribute("class", "lift");
+        floorContainer.append(liftContainer); // Append the lift container to the floor container
     }
-  }
 }
+
+
 
 let x = 0;
 
