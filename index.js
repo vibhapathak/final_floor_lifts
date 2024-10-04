@@ -4,22 +4,23 @@ const submitButton = document.getElementById("submit-btn");
 const container = document.getElementById("container");
 const liftContainer = document.createElement("div");
 
-let floorVal = "";
-let liftVal = "";
-var prevFloor = 0;
-
-let targetFloors = [];
+let liftStates = {}; // Track the state of each lift
+let liftQueues = {}; // Queue for each lift
 
 submitButton.addEventListener("click", () => {
-    container.innerHTML = " ";
+    container.innerHTML = "";
     liftContainer.innerHTML = "";
     
     const numFloors = parseInt(floorInput.value, 10);
     const numLifts = parseInt(LiftInput.value, 10);
 
     for (let i = numFloors; i > 0; i--) {
-        // Create floors
         createFloors(i, numLifts);
+    }
+
+    for (let i = 0; i < numLifts; i++) {
+        liftStates[`lift-${i}`] = { currentFloor: 1, busy: false, direction: null, doorsOpen: false };
+        liftQueues[`lift-${i}`] = [];
     }
 
     // Empty input box
@@ -27,7 +28,6 @@ submitButton.addEventListener("click", () => {
     floorInput.value = "";
 });
 
-// Make Floors
 function createFloors(floors, lifts) {
     const floorDiv = document.createElement("div");
     floorDiv.setAttribute("class", "floordiv");
@@ -45,8 +45,8 @@ function createFloors(floors, lifts) {
     UpButton.setAttribute("class", "up-down");
     DownButton.setAttribute("class", "up-down");
 
-    UpButton.setAttribute("id", floors);
-    DownButton.setAttribute("id", floors);
+    UpButton.setAttribute("id", `up-${floors}`);
+    DownButton.setAttribute("id", `down-${floors}`);
 
     UpButton.innerText = "Up";
     DownButton.innerText = "Down";
@@ -69,10 +69,10 @@ function createFloors(floors, lifts) {
     // Logic to generate Lifts only for the first floor
     if (floors === 1) {
         for (let j = 0; j < lifts; j++) {
-            let Lifts = document.createElement("div");
-            Lifts.setAttribute("class", "lift-div");
-            Lifts.setAttribute("onfloor", 1); // Ensure lifts start on floor 1
-            Lifts.dataset.currentLocation = prevFloor;
+            let lift = document.createElement("div");
+            lift.setAttribute("class", "lift-div");
+            lift.setAttribute("onfloor", 1);
+            lift.dataset.id = `lift-${j}`;
 
             let leftDoor = document.createElement("div");
             let rightDoor = document.createElement("div");
@@ -80,149 +80,130 @@ function createFloors(floors, lifts) {
             leftDoor.setAttribute("class", "left-door");
             rightDoor.setAttribute("class", "right-door");
 
-            Lifts.appendChild(leftDoor);
-            Lifts.appendChild(rightDoor);
+            lift.appendChild(leftDoor);
+            lift.appendChild(rightDoor);
 
-            liftContainer.appendChild(Lifts);
+            liftContainer.appendChild(lift);
         }
         
         liftContainer.setAttribute("class", "lift");
-        floorContainer.append(liftContainer); // Append the lift container to the floor container
+        floorContainer.append(liftContainer);
     }
 }
-
-
-
-let x = 0;
 
 document.addEventListener("click", (e) => {
-  if (e.target.classList.contains("up-down")) {
-    if (e.target.dataset.floor === x) {
-      return;
-    } else {
-      LiftStatus(e.target.dataset.floor);
-    }
+    if (e.target.classList.contains("up-down")) {
+        const clickedFloor = parseInt(e.target.dataset.floor);
+        const isUpButton = e.target.innerText === "Up";
 
-    x = e.target.dataset.floor;
-  }
+        // Disable the button and turn it grey
+        e.target.style.backgroundColor = "gray"; 
+        e.target.classList.add("disabled");
+
+        requestLift(clickedFloor, isUpButton);
+    }
 });
 
-function LiftStatus(clickedFloor) {
-    const lifts = document.querySelectorAll(".lift-div");
-    let liftOnFloor = false; // Flag to check if a lift is already on the clicked floor
+function requestLift(requestedFloor, isUp) {
+    const direction = isUp ? "up" : "down";
+    let selectedLift = null;
+    let minDistance = Infinity;
 
-    // Check if any lift is currently on the clicked floor
-    for (let i = 0; i < lifts.length; i++) {
-        if (parseInt(lifts[i].getAttribute("onfloor")) === parseInt(clickedFloor)) {
-            liftOnFloor = true; // A lift is already there
-            openLiftDoors(lifts[i]); // Open doors of the lift present
-            break;
+    for (const liftId in liftStates) {
+        const lift = liftStates[liftId];
+        const distance = Math.abs(lift.currentFloor - requestedFloor);
+
+        if (!lift.busy && distance < minDistance) {
+            selectedLift = liftId;
+            minDistance = distance;
         }
     }
 
-    // If a lift is on the clicked floor, disable the buttons
-    if (liftOnFloor) {
-        alert(`Lift already on Floor ${clickedFloor}. Please choose a different floor.`);
-        
-        // Disable buttons
-        const buttons = document.querySelectorAll(`button[id="${clickedFloor}"]`);
-        buttons.forEach(button => {
-            button.classList.add("disabled");
-        });
-
-        return; // Exit if a lift is already there
-    }
-
-    for (let i = 0; i < lifts.length; i++) {
-        if (lifts[i].classList.contains("busy")) {
-            let onFloorVal = parseInt(lifts[i].getAttribute("onfloor"));
-
-            if (onFloorVal === clickedFloor) {
-                return; // Lift is already busy on the clicked floor
-            }
-        } else {
-            MoveLift(clickedFloor, i);
-            return; // Lift is available, initiate movement
+    if (selectedLift) {
+        liftQueues[selectedLift].push({ floor: requestedFloor, direction: direction });
+        if (!liftStates[selectedLift].busy) {
+            processLiftQueue(selectedLift);
         }
+    } else {
+        // If all lifts are busy, add the request to the shortest queue
+        let shortestQueueLift = Object.keys(liftQueues).reduce((a, b) => 
+            liftQueues[a].length <= liftQueues[b].length ? a : b
+        );
+        liftQueues[shortestQueueLift].push({ floor: requestedFloor, direction: direction });
     }
-
-    // If all lifts are busy, add the clicked floor to the queue
-    targetFloors.push(clickedFloor);
 }
 
-// Function to open the lift doors
+function processLiftQueue(liftId) {
+    if (liftQueues[liftId].length === 0) {
+        liftStates[liftId].busy = false;
+        liftStates[liftId].direction = null;
+        return;
+    }
+
+    liftStates[liftId].busy = true;
+    const nextRequest = liftQueues[liftId].shift();
+    MoveLift(nextRequest.floor, liftId, nextRequest.direction);
+}
+
+function MoveLift(targetFloor, liftId, direction) {
+    const elevator = document.querySelector(`[data-id="${liftId}"]`);
+    let currentFloor = liftStates[liftId].currentFloor;
+    let duration = Math.abs(targetFloor - currentFloor) * 2;
+
+    liftStates[liftId].currentFloor = targetFloor;
+    liftStates[liftId].direction = direction;
+
+    // Ensure doors are closed before moving
+    if (liftStates[liftId].doorsOpen) {
+        closeLiftDoors(elevator, () => {
+            liftStates[liftId].doorsOpen = false;
+            startLiftMovement();
+        });
+    } else {
+        startLiftMovement();
+    }
+
+    function startLiftMovement() {
+        elevator.style.transition = `transform ${duration}s linear`;
+        elevator.style.transform = `translateY(-${100 * (targetFloor - 1)}px)`;
+
+        // Open doors after the lift reaches the destination
+        setTimeout(() => {
+            openLiftDoors(elevator);
+        }, duration * 1000);
+
+        // After the lift has moved and doors have closed, process next request
+        setTimeout(() => {
+            resetButtonState(targetFloor, direction);
+            processLiftQueue(liftId);
+        }, duration * 1000 + 5000); // 5 seconds for doors to open and close
+    }
+}
+
+function resetButtonState(floor, direction) {
+    const button = document.getElementById(`${direction}-${floor}`);
+    if (button) {
+        button.classList.remove("disabled");
+        button.style.backgroundColor = "";
+    }
+}
+
 function openLiftDoors(lift) {
-    const leftDoor = lift.children[0];
-    const rightDoor = lift.children[1];
+    lift.children[0].style.transition = "transform 2.5s ease-in-out";
+    lift.children[1].style.transition = "transform 2.5s ease-in-out";
+    lift.children[0].style.transform = "translateX(-100%)"; // Open left door
+    lift.children[1].style.transform = "translateX(100%)"; // Open right door
 
-    leftDoor.style.transform = "translateX(-100%)"; // Open left door
-    rightDoor.style.transform = "translateX(100%)"; // Open right door
-
-    // Close doors after a delay
     setTimeout(() => {
-        leftDoor.style.transform = "none"; // Close left door
-        rightDoor.style.transform = "none"; // Close right door
-
-        // Re-enable buttons for the clicked floor
-        const floor = lift.getAttribute("onfloor");
-        const buttons = document.querySelectorAll(`button[id="${floor}"]`);
-        buttons.forEach(button => {
-            button.classList.remove("disabled");
-        });
-    }, 3000); // Adjust the time as needed for door open duration
+        closeLiftDoors(lift);
+    }, 2500);
 }
 
+function closeLiftDoors(lift, callback) {
+    lift.children[0].style.transform = "none"; // Close left door
+    lift.children[1].style.transform = "none"; // Close right door
 
-  function MoveLift(clickedFloor, pos) {
-    const elevators = document.getElementsByClassName("lift-div");
-    const elevator = elevators[pos];
-    let currentFloor = elevator.getAttribute("onfloor");
-    let duration = Math.abs(parseInt(clickedFloor) - parseInt(currentFloor)) * 2;
-
-    elevator.setAttribute("onfloor", clickedFloor);
-    elevator.style.transition = `transform ${duration}s linear`;
-    elevator.style.transform = `translateY(-${100 * parseInt(clickedFloor) - 100}px)`;
-    elevator.classList.add("busy");
-
-    // Open doors after the lift reaches the destination
     setTimeout(() => {
-        elevator.children[0].style.transform = "translateX(-100%)"; // Open left door
-        elevator.children[1].style.transform = "translateX(100%)"; // Open right door
-    }, duration * 1000 + 1000);
-
-    // Close doors after they are opened for a certain duration
-    setTimeout(() => {
-        elevator.children[0].style.transform = "none"; // Close left door
-        elevator.children[1].style.transform = "none"; // Close right door
-    }, duration * 1000 + 4000);
-
-    // After the lift has moved and doors have closed, reset button states
-    setTimeout(() => {
-        elevator.classList.remove("busy");
-
-        // Reset the disabled state of buttons for the current floor
-        const buttons = document.querySelectorAll(`button[id="${clickedFloor}"]`);
-        buttons.forEach(button => {
-            button.classList.remove("disabled");
-        });
-
-        // Also check if we can enable other floors that the lift was busy on
-        resetButtonStates();
-
-        // Check if there are any floors in the queue to process
-        if (targetFloors.length) {
-            MoveLift(targetFloors.shift(), pos);
-        }
-    }, duration * 1000 + 7000);
-}
-
-function resetButtonStates() {
-    const lifts = document.querySelectorAll(".lift-div");
-    lifts.forEach(lift => {
-        const onFloor = parseInt(lift.getAttribute("onfloor"));
-        const buttons = document.querySelectorAll(`button[id="${onFloor}"]`);
-        buttons.forEach(button => {
-            button.classList.remove("disabled");
-        });
-    });
+        if (callback) callback();
+    }, 2500);
 }
